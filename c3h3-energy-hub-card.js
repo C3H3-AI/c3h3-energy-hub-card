@@ -5,6 +5,15 @@
 
 const _niceStep = (mv) => { if (mv<5) return 1; if (mv<20) return 5; if (mv<50) return 10; if (mv<100) return 20; if (mv<200) return 50; if (mv<500) return 100; if (mv<1000) return 200; if (mv<5000) return 500; return Math.round(mv/20/100)*100; };
 const CC = { el:'#1565C0', ga:'#E65100', wa:'#00838F', y1:'#1565C0', y2:'#64B5F6', pk:'#D32F2F', fl:'#F57F17', vl:'#2E7D32', gp:'#1B5E20', el2:'#42A5F5' };
+
+// i18n
+var I18N={'zh-CN':{year:'本年',month:'本月',ele:'用电',gas:'燃气',water:'用水',total:'总账单',thisYr:'本年',lastYr:'去年',details:'点击查看详情',balance:'余额',lastMo:'上月',yrFee:'年费',cum:'累计',bill:'本期',loading:'加载中...',moKwh:'本月kWh',moM3:'本月m3',yrM3:'年m3',moFee:'本月费',peak:'峰',flat:'平',valley:'谷',estBill:'预估账单',avgMo:'历史月均',cumCost:'累计费用',tier1:'一阶',tier2:'二阶',tier3:'三阶',sum:'合计',t1Usage:'一阶累计',left:'剩',daily:'近30日日用电',yest:'昨日',ele2:'电',gas2:'气',water2:'水',export:'导出',alert1:'!',alert2:'!!',vsAvg:'vs月均',cost:'费用',yrCost:'年费'},'en':{year:'Year',month:'Month',ele:'Elec',gas:'Gas',water:'Water',total:'Total',thisYr:'This Yr',lastYr:'Last Yr',details:'Details',balance:'Bal',lastMo:'Last',yrFee:'Yr',cum:'Cum',bill:'Bill',loading:'Loading...',moKwh:'/mo kWh',moM3:'/mo m3',yrM3:'/yr m3',moFee:'Cost',peak:'Peak',flat:'Flat',valley:'Valley',estBill:'Est Bill',avgMo:'Avg/mo',cumCost:'Total',tier1:'T1',tier2:'T2',tier3:'T3',sum:'Sum',t1Usage:'T1 used',left:'left',daily:'30d daily',yest:'Yest',ele2:'E',gas2:'G',water2:'W',export:'Export',alert1:'!!',alert2:'!!!',vsAvg:'vs avg',cost:'Cost',yrCost:'Yr Cost'}};
+function _T(h,k){var l='zh-CN';if(h&&h.language)l=h.language;else if(document&&document.documentElement&&document.documentElement.lang)l=document.documentElement.lang;if(!I18N[l])l=l.indexOf('zh')>=0?'zh-CN':'en';return I18N[l][k]||k;}
+// localStorage cache
+function _cK(p,id,y){return'eh4_'+p+'_'+id.replace(/[^a-z0-9]/g,'_')+'_'+y;}
+function _cG(k){try{var d=JSON.parse(localStorage.getItem(k));if(d&&d.ts>Date.now()-1800000)return d.data;}catch(e){}return null;}
+function _cS(k,d){try{localStorage.setItem(k,JSON.stringify({ts:Date.now(),data:d}));}catch(e){}}
+
 const DA = [
   {id:'ele:total', icon:'⚡', name:'用电合计', unit:'kWh', color:CC.el, group:'ele'},
   {id:'ele:3305820502430', icon:'⚡', name:'202室', unit:'kWh', color:CC.el, group:'ele'},
@@ -28,6 +37,8 @@ function _fc(arr,m){const n=new Date().getMonth()+1;if(n>=m||n<=0)return 0;retur
 function _pp(v){return v>=1000?(v/1000).toFixed(1)+'k':v.toFixed(0);}
 
 class C3h3EnergyHubCard extends HTMLElement {
+  static getConfigElement() { return null; }
+  static getStubConfig() { return { filters:['ele','gas','water'], budgets:{}, alertThreshold:1.3 }; }
   setConfig(config) {
     this._config = config || {};
     this._year = new Date().getFullYear();
@@ -226,16 +237,22 @@ class C3h3EnergyHubCard extends HTMLElement {
   _loadDetail(id) {
     if (!id) return;
     if (id === 'water') { this._renderRows(); return; }
-    this._loadingDetails[id] = true;
-    this._renderRows();
     var self = this;
     var year = this._hoverYear;
     var ck = id + ':' + year;
-    if (this._detailCache[ck] && this._detailCache[id + ':' + (year-1)]) {
-      this._loadingDetails[id] = false;
+    var ck2 = id + ':' + (year-1);
+    // Check cache first
+    if (this._detailCache[ck] && this._detailCache[ck2]) { this._renderRows(); return; }
+    var cached1 = _cG(_cK('dc',id,year));
+    var cached2 = _cG(_cK('dc',id,year-1));
+    if (cached1 && cached2) {
+      this._detailCache[ck] = cached1;
+      this._detailCache[ck2] = cached2;
       this._renderRows();
       return;
     }
+    this._loadingDetails[id] = true;
+    this._renderRows();
     if (id === 'ele:total') {
       // Load both accounts and combine
       var c1 = '3305820502430';
@@ -302,9 +319,11 @@ class C3h3EnergyHubCard extends HTMLElement {
         var cb = {}; for (var si=0;si<c1.length;si++) { cb[new Date(c1[si].start).getMonth()] = c1[si].change || 0; }
         var bm = {}; for (var si=0;si<m1.length;si++) { var mo=new Date(m1[si].start).getMonth(); bm[mo] = {change:m1[si].change||0, sum:m1[si].sum||0, cost:cb[mo]||0}; }
         self._detailCache[id+':'+year] = bm;
+        _cS(_cK('dc',id,year),bm);
         var cb2 = {}; for (var si=0;si<c2.length;si++) { cb2[new Date(c2[si].start).getMonth()] = c2[si].change || 0; }
         var bm2 = {}; for (var si=0;si<m2.length;si++) { var mo2=new Date(m2[si].start).getMonth(); bm2[mo2] = {change:m2[si].change||0, sum:m2[si].sum||0, cost:cb2[mo2]||0}; }
         self._detailCache[id+':'+(year-1)] = bm2;
+        _cS(_cK('dc',id,year-1),bm2);
         if (id.indexOf('ele:') === 0) {
           var c = id.split(':')[1];
           var ds = self._hass.states['sensor.state_grid_' + c + '_recent_30_daily_ele_list'];
