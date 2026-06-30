@@ -1,6 +1,7 @@
 /**
- * c3h3-energy-hub-card v3.5 — 能源中心（全功能版）
- * 累计趋势·环比标签·月份下钻·费用占比·过滤·导出·响应式
+ * c3h3-energy-hub-card v1.0 — C3H3 Energy Hub Card
+ * Multi-source energy hub: Electricity / Gas / Water
+ * Charts, budgets, alerts, filter, export, i18n, responsive
  */
 
 const _niceStep = (mv) => { if (mv<5) return 1; if (mv<20) return 5; if (mv<50) return 10; if (mv<100) return 20; if (mv<200) return 50; if (mv<500) return 100; if (mv<1000) return 200; if (mv<5000) return 500; return Math.round(mv/20/100)*100; };
