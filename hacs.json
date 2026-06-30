@@ -1,0 +1,8 @@
+{
+  "name": "C3H3 Energy Hub Card",
+  "render_readme": true,
+  "content_in_root": true,
+  "filename": "c3h3-energy-hub-card.js",
+  "homeassistant": "2025.1.0",
+  "country": ["CN"]
+}
