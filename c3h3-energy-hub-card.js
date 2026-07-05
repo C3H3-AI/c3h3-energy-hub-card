@@ -389,7 +389,7 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
       });
       this.addEventListener('mouseover', function(e) {
-        let btn = e.target.closest('[data-action="month"]');
+        let btn = e.target.closest('[data-action="month"],[data-action="drill"]');
         if (!btn) return;
         let m = Number(btn.dataset.month);
         if (!self._hoverMonth || self._hoverMonth.month !== m) {
@@ -399,7 +399,7 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
       });
       this.addEventListener('mouseout', function(e) {
-        if (!e.target.closest('[data-action="month"]')) return;
+        if (!e.target.closest('[data-action="month"],[data-action="drill"]')) return;
         self._hoverMonth = null;
         if (self._ht) clearTimeout(self._ht);
         self._ht = setTimeout(function() { self._ht=null; self._renderRows(); }, 200);
@@ -1337,7 +1337,7 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
         if (h2>0) {
           bars += '<rect x="' + cx.toFixed(1) + '" y="' + (yb-h2).toFixed(1) + '" width="' + BW.toFixed(1) + '" height="' + h2.toFixed(1) + '" fill="' + CC.y2 + '" rx="2" cursor="pointer" data-action="month" data-year="' + (this._hoverYear-1) + '" data-month="' + i + '" opacity="0.85"/>' +
-            '<rect x="' + cx.toFixed(1) + '" y="' + PT.toFixed(1) + '" width="' + BW.toFixed(1) + '" height="' + (CH*0.85).toFixed(1) + '" fill="transparent" cursor="pointer"/>';
+            '<rect x="' + cx.toFixed(1) + '" y="' + PT.toFixed(1) + '" width="' + BW.toFixed(1) + '" height="' + (CH*0.85).toFixed(1) + '" fill="transparent" data-action="month" data-year="' + (this._hoverYear-1) + '" data-month="' + i + '" cursor="pointer"/>';
         }
         if (i%2===0) { labels += '<text x="' + cx.toFixed(1) + '" y="' + (H-4) + '" text-anchor="middle" fill="var(--secondary-text-color)" font-size="9">' + (i+1) + '</text>'; }
       }
