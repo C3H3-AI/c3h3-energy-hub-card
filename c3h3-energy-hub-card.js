@@ -172,6 +172,17 @@ const STYLE = '<style>.eh{font-family:var(--paper-font-body1_-_font-family);font
 '.eh .ed{display:grid;grid-template-columns:1fr 1fr;gap:12px}}' +
 // Mobile: expanded detail stacked
 '.eh .ed{display:flex;flex-direction:column;gap:10px}' +
+// Desktop 4-column layout
+'@media(min-width:900px){.eh .dg{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}' +
+'.eh .dc{border:1px solid var(--divider-color);border-radius:12px;overflow:hidden}' +
+'.eh .dc-hd{padding:10px 12px 8px;font-size:13px;font-weight:600;border-bottom:1px solid var(--divider-color);display:flex;align-items:center;gap:6px}' +
+'.eh .dc-bd{padding:8px 12px 10px}' +
+'.eh .dc-it{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--divider-color);font-size:12px}' +
+'.eh .dc-it:last-child{border-bottom:none}' +
+'.eh .dc-it .dv{font-size:14px;font-weight:700;color:var(--primary-text-color)}' +
+'.eh .dc-it .dl{font-size:10px;color:var(--secondary-text-color)}' +
+'.eh .dc-bud{height:4px;border-radius:2px;background:var(--divider-color);overflow:hidden;margin:2px 0}' +
+'.eh .dc-bud>div{height:100%;border-radius:2px;transition:width .3s}}' +
 '@media (min-width:600px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:14px}}' +
 '@media (min-width:1024px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:20px}}' +
 '@media print{.eh .nb,.eh .ar{display:none!important}.eh .b{padding:8px}.eh .rs{border:none;border-radius:0}.eh .en{break-inside:avoid}}' +
@@ -847,6 +858,96 @@ class C3h3EnergyHubCard extends HTMLElement {
     this._el.or.innerHTML = orArr.join('');
   }
 
+  // Desktop 4-column layout for wide screens
+  _renderDesktopLayout(ld, y1, y2) {
+    let groups = [
+      { key:'electricity', icon:'⚡', label:'用电', color:CC.el, unit:'kWh', accounts:[] },
+      { key:'gas', icon:'🔥', label:'燃气', color:CC.ga, unit:'m³', accounts:[] },
+      { key:'water', icon:'💧', label:'用水', color:CC.wa, unit:'m³', accounts:[] }
+    ];
+    for (let ai=0;ai<this._accounts.length;ai++) {
+      let a = this._accounts[ai];
+      if (a.consNo === 'total') continue;
+      for (let gi=0;gi<groups.length;gi++) {
+        if (groups[gi].key === a.type) { groups[gi].accounts.push(a); break; }
+      }
+    }
+
+    let html = '<div class="dg">';
+
+    // Column 1: Overall
+    let ringEle = 0, ringGas = 0, ringWater = 0;
+    for (let ai=0;ai<this._accounts.length;ai++) {
+      let a = this._accounts[ai]; if (a.consNo==='total') continue;
+      let d = ld[a.id]; if (!d) continue;
+      if (a.type==='electricity') ringEle += d.cost || 0;
+      else if (a.type==='gas') ringGas += d.bill || 0;
+      else if (a.type==='water') ringWater += d.bill || 0;
+    }
+    let cVals = [], cCols = [], cLabels = [];
+    let cm = [{v:ringEle,c:CC.el,l:'用电'},{v:ringGas,c:CC.ga,l:'燃气'},{v:ringWater,c:CC.wa,l:'用水'}];
+    for (let ci=0;ci<cm.length;ci++) { if (cm[ci].v>0) { cVals.push(cm[ci].v); cCols.push(cm[ci].c); cLabels.push(cm[ci].l); } }
+    let cTotal = cVals.length>0 ? cVals.reduce((a,b)=>a+b,0) : 0;
+    let ovItems = '';
+    for (let i=0;i<cLabels.length;i++) {
+      ovItems += '<div class="dc-it"><span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:4px;background:' + cCols[i] + '"></span>' + cLabels[i] + '</span><span class="dv" style="color:' + cCols[i] + '">¥' + cVals[i].toFixed(0) + '</span></div>';
+    }
+    html += '<div class="dc"><div class="dc-hd">📊 总览</div><div class="dc-bd"><div class="dw" style="width:120px;height:120px;margin:0 auto 6px">' +
+      _ring(cVals, cCols) + '</div>' + ovItems +
+      (cTotal>0?'<div class="dc-it" style="font-weight:600;border-bottom:none"><span>合计</span><span class="dv">¥' + cTotal.toFixed(0) + '</span></div>':'') +
+      '</div></div>';
+
+    // Columns 2-4: Electricity, Gas, Water
+    for (let gi=0;gi<groups.length;gi++) {
+      let grp = groups[gi];
+      let accs = grp.accounts;
+      if (accs.length === 0) { html += '<div class="dc"><div class="dc-hd" style="color:' + grp.color + '">' + grp.icon + ' ' + grp.label + '</div><div class="dc-bd" style="text-align:center;color:var(--secondary-text-color);font-size:12px;padding:20px">无数据</div></div>'; continue; }
+
+      let colHtml = '';
+      for (let ai=0;ai<accs.length;ai++) {
+        let a = accs[ai], d = ld[a.id];
+        if (!d || d.month == null) continue;
+        let costStr = '';
+        if (a.type==='electricity') costStr = d.cost != null ? '上月 ¥' + d.cost.toFixed(0) : '';
+        else if (a.type==='gas') costStr = d.cost != null ? '累计 ¥' + d.cost.toFixed(0) : (d.bill != null ? '账单 ¥' + d.bill.toFixed(0) : '');
+        else if (a.type==='water') costStr = d.cost != null ? '累计 ¥' + d.cost.toFixed(0) : (d.bill != null ? '账单 ¥' + d.bill.toFixed(0) : '');
+
+        colHtml += '<div class="dc-it">' +
+          '<span style="display:flex;align-items:center;gap:4px"><span class="ic" style="width:20px;height:20px;border-radius:50%;background:' + a.color + '15;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">' + a.icon + '</span>' + a.name + '</span>' +
+          '<span class="dv">' + d.month.toFixed(1) + ' <span class="dl">' + grp.unit + '</span></span></div>';
+        if (costStr) colHtml += '<div style="font-size:10px;color:var(--secondary-text-color);text-align:right;margin-top:-3px;margin-bottom:2px">' + costStr + '</div>';
+
+        // Budget bar
+        let budget = this._budgets[a.group];
+        if (budget && d.month != null) {
+          let pct = Math.min(100, (d.month/budget)*100);
+          let bc = pct>100?'#ef4444':(pct>80?'#f59e0b':'#10b981');
+          colHtml += '<div class="dc-bud"><div style="width:' + pct.toFixed(0) + '%;background:' + bc + '"></div></div>';
+        }
+        // Balance
+        if (d.balance != null) colHtml += '<div style="font-size:10px;color:var(--secondary-text-color);margin-top:2px">余额 ¥' + d.balance.toFixed(2) + '</div>';
+      }
+
+      // Chart for this group (use first account's detail cache)
+      let firstAcc = accs[0];
+      let ca1 = this._detailCache[firstAcc.id+':'+y1] || {};
+      let ca2 = this._detailCache[firstAcc.id+':'+y2] || {};
+      let mode = this._chartModes[firstAcc.id] || (firstAcc.type==='water'?'cost':'usage');
+      let chartHtml = '';
+      if (Object.keys(ca1).length > 0) {
+        chartHtml += '<div class="ha" style="justify-content:space-between;margin:4px 0 2px"><div class="ha">' + this._btnGroup(firstAcc) + '</div>' +
+          '<div class="ha"><button class="nb" data-action="cy" data-dir="-1"><</button><span class="yt" style="font-size:11px;min-width:24px">' + y1 + '</span><button class="nb" data-action="cy" data-dir="1">></button></div></div>' +
+          '<div style="font-size:9px;display:flex;gap:8px;margin-bottom:2px"><span style="display:flex;align-items:center;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:' + CC.y1 + '"></span>本年</span><span style="display:flex;align-items:center;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:' + CC.y2 + '"></span>去年</span></div>' +
+          '<div class="ca">' + this._chartSVG(firstAcc.id, ca1, ca2, mode, this._chartTypes[firstAcc.id]||'bar', firstAcc.name) + '</div>';
+      }
+
+      html += '<div class="dc"><div class="dc-hd" style="color:' + grp.color + '">' + grp.icon + ' ' + grp.label + '</div><div class="dc-bd">' + colHtml + chartHtml + '</div></div>';
+    }
+
+    html += '</div>';
+    this._el.rc.innerHTML = html;
+  }
+
   _renderRows() {
     let ld = this._liveData;
     let y1 = this._hoverYear;
@@ -855,6 +956,12 @@ class C3h3EnergyHubCard extends HTMLElement {
     // Yearly summary view
     if (this._showSummary) {
       this._el.rc.innerHTML = this._renderYearSummary(ld, y1, y2);
+      return;
+    }
+
+    // Desktop 4-column layout for wide containers
+    if (this._el.rc && this._el.rc.clientWidth >= 800) {
+      this._renderDesktopLayout(ld, y1, y2);
       return;
     }
 
