@@ -181,6 +181,7 @@ const STYLE = '<style>.eh{font-family:var(--paper-font-body1_-_font-family);font
 '.eh .dc-it:last-child{border-bottom:none}.eh .dc-it:hover{background:var(--secondary-background-color)}' +
 '.eh .dc-it .dv{font-weight:700;color:var(--primary-text-color)}' +
 '.eh .dc-ex{padding:4px 0 0;border-bottom:1px solid var(--divider-color)}' +
+'.eh .dc-bud{height:4px;border-radius:2px;background:var(--divider-color);overflow:hidden}' +
 '.eh .dc-arr{font-size:10px;color:var(--secondary-text-color);transition:transform .2s;margin-left:4px}}' +
 '@media (min-width:600px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:14px}}' +
 '@media (min-width:1024px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:20px}}' +
@@ -920,6 +921,20 @@ class C3h3EnergyHubCard extends HTMLElement {
           '<span style="display:flex;align-items:center;gap:4px;flex:1;min-width:0"><span class="ic" style="width:20px;height:20px;border-radius:50%;background:' + a.color + '15;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">' + a.icon + '</span>' +
           '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + a.name + '</span><span class="dc-arr">' + (this._colExpanded[colKey]?'▼':'▶') + '</span></span>' +
           '<span class="dv">' + d.month.toFixed(1) + ' <span style="font-weight:400;font-size:10px;color:var(--secondary-text-color)">' + tc.unit + '</span></span></div>';
+
+        // Cost info / balance / budget below account row
+        let subInfo = [];
+        if (costInfo) subInfo.push(costInfo);
+        if (d.balance != null) subInfo.push('余额 ¥' + d.balance.toFixed(2));
+        if (subInfo.length > 0) colHtml += '<div style="font-size:10px;color:var(--secondary-text-color);margin-top:-2px;margin-bottom:2px;padding:0 2px">' + subInfo.join(' · ') + '</div>';
+
+        // Budget bar
+        let budget = this._budgets[a.group];
+        if (budget && d.month != null && a.consNo !== 'total') {
+          let pct = Math.min(100, (d.month / budget) * 100);
+          let bc = pct > 100 ? '#ef4444' : (pct > 80 ? '#f59e0b' : '#10b981');
+          colHtml += '<div class="dc-bud" style="margin:0 0 4px"><div style="width:' + pct.toFixed(0) + '%;background:' + bc + '"></div></div>';
+        }
 
         // Expanded chart section
         if (this._colExpanded[colKey]) {
