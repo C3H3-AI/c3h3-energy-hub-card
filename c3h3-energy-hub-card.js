@@ -33,7 +33,49 @@ function _ring(vals, colors) {
   const ir=r*0.58;
   return `<svg width="72" height="72" viewBox="0 0 72 72">${sv}<circle cx="${cx}" cy="${cy}" r="${ir}" fill="var(--card-background-color,#fff)"/><text x="${cx}" y="${cy+1}" text-anchor="middle" fill="var(--primary-text-color)" font-size="12" font-weight="700">${t.toFixed(0)}</text><text x="${cx}" y="${cy+11}" text-anchor="middle" fill="var(--secondary-text-color)" font-size="7">kWh</text></svg>`;
 }
-function _tip(m,d1,d2,u,PL,SX,H,W,pos,mode) { const s1=d1[m];if(!s1)return''; const g1=Math.max(0,s1.change||0).toFixed(1), c1=s1.cost?Math.max(0,s1.cost).toFixed(0):''; const s2=d2[m]; const g2=s2?Math.max(0,s2.change||0).toFixed(1):'0.0'; const c2=s2&&s2.cost?Math.max(0,s2.cost).toFixed(0):''; const TW=110,TH=mode==='cost'?30:40; let tx=pos?Math.max(2,Math.min(W-TW-2,pos.x-TW/2)):2, ty=pos?Math.max(2,Math.min(H-TH-2,pos.y-TH-8)):2; if (ty<2) ty=pos?Math.min(H-TH-2,pos.y+10):2; let y1Total=s1.change?s1.change.toFixed(1)+u:''; let y2Total=s2?s2.change?s2.change.toFixed(1)+u:'0.0'+u:'0.0'+u; let cost1=c1?' '+c1+'元':''; let cost2=(c2?' '+c2+'元':''); if(c1){y1Total+=' ('+c1+'元)'} if(c2){y2Total+=' ('+c2+'元)'} return `<g style="pointer-events:none;opacity:0.92"><rect x="${tx}" y="${ty}" width="${TW}" height="${TH}" rx="6" fill="var(--card-background-color)" stroke="var(--divider-color)" stroke-width="0.5" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.12))"/><text x="${tx+6}" y="${ty+13}" fill="var(--primary-text-color)" font-size="10" font-weight="600">${m+1}月</text><text x="${tx+6}" y="${ty+24}" fill="${CC.y1}" font-size="9">本年: ${y1Total}</text><text x="${tx+6}" y="${ty+33}" fill="${CC.y2}" font-size="9">去年: ${y2Total}</text></g>`; }
+function _tip(m, d1, d2, u, PL, SX, H, W, pos, mode, acct) {
+  const s1 = d1 && d1[m]; if (!s1) return '';
+  const s2 = d2 && d2[m];
+  const TW = 150, TH = 62;
+  let tx = pos ? Math.max(2, Math.min(W - TW - 2, pos.x - TW / 2)) : 2;
+  let ty = pos ? Math.max(2, Math.min(H - TH - 2, pos.y - TH - 8)) : 2;
+  if (ty < 2) ty = pos ? Math.min(H - TH - 2, pos.y + 10) : 2;
+
+  const y1v = Math.max(0, s1.change || 0);
+  const y1c = s1.cost || 0;
+  const y2v = s2 ? Math.max(0, s2.change || 0) : 0;
+  const y2c = s2 ? (s2.cost || 0) : 0;
+
+  const hasCost = y1c > 0 || y2c > 0;
+  const unit = u || (acct && acct.unit) || '';
+  const color1 = CC.y1, color2 = CC.y2;
+
+  let rows = '';
+  // This year row
+  rows += `<text x="${tx + 8}" y="${ty + 16}" fill="${color1}" font-size="11" font-weight="600">${m+1}月</text>`;
+  rows += `<text x="${tx + 48}" y="${ty + 16}" fill="var(--primary-text-color)" font-size="11" font-weight="600">${y1v.toFixed(1)}${unit}</text>`;
+  if (hasCost) rows += `<text x="${tx + 115}" y="${ty + 16}" fill="var(--secondary-text-color)" font-size="10">¥${y1c.toFixed(0)}</text>`;
+  // Last year row
+  rows += `<text x="${tx + 8}" y="${ty + 32}" fill="${color2}" font-size="10">去年</text>`;
+  rows += `<text x="${tx + 48}" y="${ty + 32}" fill="var(--primary-text-color)" font-size="10">${y2v.toFixed(1)}${unit}</text>`;
+  if (hasCost) rows += `<text x="${tx + 115}" y="${ty + 32}" fill="var(--secondary-text-color)" font-size="9">¥${y2c.toFixed(0)}</text>`;
+  // YoY
+  if (y2v > 0 && y1v > 0) {
+    const yoy = ((y1v - y2v) / y2v * 100);
+    const yoyStr = (yoy > 0 ? '+' : '') + yoy.toFixed(1) + '%';
+    const yoyClr = yoy > 0 ? '#ef4444' : (yoy < 0 ? '#10b981' : 'var(--secondary-text-color)');
+    rows += `<text x="${tx + 8}" y="${ty + 48}" fill="${yoyClr}" font-size="10" font-weight="600">同比 ${yoyStr}</text>`;
+    // Show diff
+    const diff = y1v - y2v;
+    rows += `<text x="${tx + 100}" y="${ty + 48}" fill="var(--secondary-text-color)" font-size="9">${diff > 0 ? '+' : ''}${diff.toFixed(1)}${unit}</text>`;
+  }
+
+  const ht = hasCost ? 48 : 40;
+  return `<g style="pointer-events:none;opacity:0.95">
+    <rect x="${tx}" y="${ty}" width="${TW}" height="${ht}" rx="8" fill="var(--card-background-color)" stroke="var(--divider-color)" stroke-width="0.5" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,0.15))"/>
+    ${rows}
+  </g>`;
+}
 function _pct(v,t){return t>0?((v/t)*100).toFixed(0):'0'}
 function _yoy(cur,prev){if(!prev||prev<=0)return '';const d=((cur-prev)/prev)*100;return(d>0?'+':'-')+Math.abs(d).toFixed(1)+'%';}
 function _cum(arr,m){const r=[];let s=0;for(let i=0;i<m;i++){s+=(arr[i]||0);r.push(s);}return r;}
@@ -1309,7 +1351,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       if (hm != null) {
         hl = '<rect x="' + Math.max(PL, PL+hm.month*SX-SX*0.45).toFixed(1) + '" y="' + PT + '" width="' + (SX*0.9).toFixed(1) + '" height="' + CH.toFixed(1) + '" class="crh" rx="4"/>';
       }
-      tip = hm != null ? _tip(hm.month, d1, d2, u, PL, SX, H, W, this._hoverPos, mode) : '';
+      tip = hm != null ? _tip(hm.month, d1, d2, u, PL, SX, H, W, this._hoverPos, mode, this._accounts.find(function(a){return a.id===id;})) : '';
       svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:100%;display:block"><style>.crh{fill:var(--primary-color);opacity:0.08;pointer-events:none}</style>' + grid + hl + pvBars + bars + labels + dbtns + tip + '</svg>' + pvLeg;
     } else {
       let lines1 = ''; let dots1 = '';
@@ -1346,7 +1388,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       if (hm != null) {
         hl = '<rect x="' + Math.max(PL, PL+hm.month*SX-SX*0.45).toFixed(1) + '" y="' + PT + '" width="' + (SX*0.9).toFixed(1) + '" height="' + CH.toFixed(1) + '" class="crh" rx="4"/>';
       }
-      tip = hm != null ? _tip(hm.month, d1, d2, u, PL, SX, H, W, this._hoverPos, mode) : '';
+      tip = hm != null ? _tip(hm.month, d1, d2, u, PL, SX, H, W, this._hoverPos, mode, this._accounts.find(function(a){return a.id===id;})) : '';
       let area1 = lines1 + ' L' + (PL+(months-1)*SX).toFixed(1) + ',' + (H-PB) + ' L' + PL + ',' + (H-PB) + ' Z';
       svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:100%;display:block;pointer-events:auto"><style>.crh{fill:var(--primary-color);opacity:0.08;pointer-events:none}</style>' + grid + hl +
         '<path d="' + lines1 + '" fill="none" stroke="' + CC.y1 + '" stroke-width="1.5" opacity="0.85"/>' +
