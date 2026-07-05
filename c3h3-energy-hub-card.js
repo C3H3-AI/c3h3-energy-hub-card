@@ -415,8 +415,13 @@ class C3h3EnergyHubCard extends HTMLElement {
           self._renderRows();
         } else if (a === 'colToggle') {
           let colKey = btn.dataset.col;
-          if (self._colExpanded[colKey]) delete self._colExpanded[colKey];
-          else self._colExpanded[colKey] = true;
+          if (self._colExpanded[colKey]) { delete self._colExpanded[colKey]; }
+          else {
+            self._colExpanded[colKey] = true;
+            // Load detail cache for chart
+            let sep = colKey.indexOf(':');
+            if (sep >= 0) { self._loadDetail(colKey.substring(sep + 1)); }
+          }
           self._renderRows();
         } else if (a === 'calPrev') {
           self._calMonth = self._calMonth > 0 ? self._calMonth - 1 : 11;
