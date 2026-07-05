@@ -812,10 +812,27 @@ class C3h3EnergyHubCard extends HTMLElement {
         if (d.balance != null) { sub = '余额 ' + d.balance.toFixed(1); }
         costDisplay = d.lastCost != null ? '上月 ' + d.lastCost.toFixed(0) : (yc != null ? '年费 ' + yc.toFixed(0) : '');
       } else if (a.type === 'gas') {
+        // Fallback: live sensor may be unavailable, use stats cache
         if (d.cost != null) { costDisplay = '累计 ' + d.cost.toFixed(0); }
+        else {
+          let dk = this._detailCache[a.id+':'+this._hoverYear];
+          if (dk) {
+            let totalCost = 0; let cnt = 0;
+            for (let mk in dk) { if (dk[mk].cost) { totalCost += dk[mk].cost; cnt++; } }
+            if (cnt > 0) costDisplay = '累计 ' + totalCost.toFixed(0);
+          }
+        }
         if (d.balance != null) { sub = '余额 ' + d.balance.toFixed(1); }
       } else if (a.type === 'water') {
         if (d.cost != null) { costDisplay = '累计 ' + d.cost.toFixed(0); }
+        else {
+          let dk = this._detailCache[a.id+':'+this._hoverYear];
+          if (dk) {
+            let totalCost = 0; let cnt = 0;
+            for (let mk in dk) { if (dk[mk].cost) { totalCost += dk[mk].cost; cnt++; } }
+            if (cnt > 0) costDisplay = '累计 ' + totalCost.toFixed(0);
+          }
+        }
         if (d.bill != null) { sub = 'bill ' + d.bill.toFixed(0); }
       }
 
