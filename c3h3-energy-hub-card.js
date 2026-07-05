@@ -485,7 +485,7 @@ class C3h3EnergyHubCard extends HTMLElement {
             totalBalance += sd.balance || 0;
             totalP += sd.peak || 0;
             totalV += sd.valley || 0;
-            totalLastCost += sd.lastCost || 0;
+            totalLastCost += sd.cost || 0;
           }
         }
         this._liveData[acct.id] = {
@@ -734,7 +734,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       if (!d) continue;
       if (acct.type === 'electricity') {
         eleTotal += isY ? (d.year || d.month || 0) : (d.month || 0);
-        lastCost += d.lastCost || 0;
+        lastCost += d.cost || 0;
       } else if (acct.type === 'gas') {
         gasMonth = (gasMonth || 0) + (isY ? (d.year || d.month || 0) : (d.month || 0));
         gasBill = (gasBill || 0) + (d.bill || 0);
@@ -810,10 +810,10 @@ class C3h3EnergyHubCard extends HTMLElement {
       }
     }
 
-    // Ring chart + right-side cost cards
-    let cVals = [ringEle, ringGas, ringWater].filter(function(v){return v>0;});
-    let cCols = [CC.el, CC.ga, CC.wa].slice(0, cVals.length);
-    let cLabels = ['用电', '燃气', '用水'].slice(0, cVals.length);
+    // Ring chart + right-side cost cards (use type map to avoid index shifts)
+    let cMap = [ {v:ringEle, c:CC.el, l:'用电'}, {v:ringGas, c:CC.ga, l:'燃气'}, {v:ringWater, c:CC.wa, l:'用水'} ];
+    let cVals = [], cCols = [], cLabels = [];
+    for (let ci=0;ci<cMap.length;ci++) { if (cMap[ci].v > 0) { cVals.push(cMap[ci].v); cCols.push(cMap[ci].c); cLabels.push(cMap[ci].l); } }
     this._el.dw.innerHTML = _ring(cVals, cCols);
 
     // Cost cards on the right
@@ -856,7 +856,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       if (a.type === 'electricity') {
         let yc = d.cost || d.yearCost || null;
         if (d.balance != null) { sub = '余额 ' + d.balance.toFixed(1); }
-        costDisplay = d.lastCost != null ? '上月 ' + d.lastCost.toFixed(0) : (yc != null ? '年费 ' + yc.toFixed(0) : '');
+        costDisplay = d.cost != null ? '上月 ' + d.cost.toFixed(0) : (yc != null ? '年费 ' + yc.toFixed(0) : '');
       } else if (a.type === 'gas') {
         // Fallback: live sensor may be unavailable, use stats cache
         if (d.cost != null) { costDisplay = '累计 ' + d.cost.toFixed(0); }
@@ -1043,7 +1043,7 @@ class C3h3EnergyHubCard extends HTMLElement {
     if (a.type === 'electricity') {
       return '<div class="sd2" style="margin-bottom:4px">' +
         '<div class="sc"><div class="sv">' + (d.month!=null?d.month.toFixed(1):'--') + '</div><div class="sl">本月 kWh</div></div>' +
-        '<div class="sc"><div class="sv">' + (curCost!=null?''+curCost.toFixed(0):(d.lastCost!=null?'~'+d.lastCost.toFixed(0):'--')) + '</div><div class="sl">' + (curCost!=null?'本月费':'上月费') + '</div></div>' +
+        '<div class="sc"><div class="sv">' + (curCost!=null?''+curCost.toFixed(0):(d.cost!=null?'~'+d.cost.toFixed(0):'--')) + '</div><div class="sl">' + (curCost!=null?'本月费':'上月费') + '</div></div>' +
         '<div class="sc"><div class="sv" style="color:' + (d.balance!=null&&d.balance<0?'#ef4444':'inherit') + '">' + (d.balance!=null?''+d.balance.toFixed(1):'--') + '</div><div class="sl">余额</div></div>' +
         '<div class="sc"><div class="sv">' + (d.peak!=null?'峰'+d.peak.toFixed(0):'--') + '</div><div class="sl">峰</div></div></div>';
     }
