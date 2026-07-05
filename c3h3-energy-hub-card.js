@@ -364,10 +364,12 @@ class C3h3EnergyHubCard extends HTMLElement {
           self._renderRows();
           if (self._expanded) { self._loadDetail(self._expanded); }
         } else if (a === 'sw') {
-          self._chartModes[self._expanded] = btn.dataset.mode;
+          let swTarget = btn.dataset.target || self._expanded;
+          self._chartModes[swTarget] = btn.dataset.mode;
           self._renderRows();
         } else if (a === 'ct') {
-          self._chartTypes[self._expanded] = btn.dataset.ct;
+          let ctTarget = btn.dataset.target || self._expanded;
+          self._chartTypes[ctTarget] = btn.dataset.ct;
           self._renderRows();
         } else if (a === 'cy') {
           self._hoverYear += Number(btn.dataset.dir);
@@ -379,6 +381,8 @@ class C3h3EnergyHubCard extends HTMLElement {
           self._showYear = !self._showYear;
           self._updateHeader();
         } else if (a === 'summary') {
+          // Desktop layout: all info visible, summary not needed
+          if (self._el.rc && self._el.rc.clientWidth >= 800) return;
           self._showSummary = !self._showSummary;
           if (self._showSummary) {
             // Load details for all accounts for summary data
@@ -935,7 +939,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       let mode = this._chartModes[firstAcc.id] || (firstAcc.type==='water'?'cost':'usage');
       let chartHtml = '';
       if (Object.keys(ca1).length > 0) {
-        chartHtml += '<div class="ha" style="justify-content:space-between;margin:4px 0 2px"><div class="ha">' + this._btnGroup(firstAcc) + '</div>' +
+        chartHtml += '<div class="ha" style="justify-content:space-between;margin:4px 0 2px"><div class="ha">' + this._btnGroup(firstAcc, firstAcc.id) + '</div>' +
           '<div class="ha"><button class="nb" data-action="cy" data-dir="-1"><</button><span class="yt" style="font-size:11px;min-width:24px">' + y1 + '</span><button class="nb" data-action="cy" data-dir="1">></button></div></div>' +
           '<div style="font-size:9px;display:flex;gap:8px;margin-bottom:2px"><span style="display:flex;align-items:center;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:' + CC.y1 + '"></span>本年</span><span style="display:flex;align-items:center;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:' + CC.y2 + '"></span>去年</span></div>' +
           '<div class="ca">' + this._chartSVG(firstAcc.id, ca1, ca2, mode, this._chartTypes[firstAcc.id]||'bar', firstAcc.name) + '</div>';
@@ -1156,15 +1160,16 @@ class C3h3EnergyHubCard extends HTMLElement {
       '</div>';
   }
 
-  _btnGroup(a) {
+  _btnGroup(a, targetId) {
     let m = this._chartModes[a.id]||(a.type==='water'?'cost':'usage');
     let ct = this._chartTypes[a.id]||'bar';
     let isCum = (ct === 'cum');
-    return '<button class="nb' + (m==='usage'?' a':'') + '" data-action="sw" data-mode="usage">' + a.unit + '</button><button class="nb' + (m==='cost'?' a':'') + '" data-action="sw" data-mode="cost">$</button>' +
+    let tAttr = targetId ? ' data-target="' + targetId + '"' : '';
+    return '<button class="nb' + (m==='usage'?' a':'') + '" data-action="sw" data-mode="usage"' + tAttr + '>' + a.unit + '</button><button class="nb' + (m==='cost'?' a':'') + '" data-action="sw" data-mode="cost"' + tAttr + '>$</button>' +
       '<span style="width:1px;height:16px;background:var(--divider-color);margin:0 4px"></span>' +
-      '<button class="nb' + (!isCum&&ct==='line'?' a':'') + '" data-action="ct" data-ct="line" style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><polyline points="1,12 5,8 9,10 13,2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-      '<button class="nb' + (!isCum&&ct==='bar'?' a':'') + '" data-action="ct" data-ct="bar" style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="7" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="5.5" y="4" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="10" y="1" width="3" height="12" rx="0.5" fill="currentColor"/></svg></button>' +
-      '<button class="nb' + (isCum?' a':'') + '" data-action="ct" data-ct="cum" style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><polyline points="1,12 4,12 4,8 7,8 7,5 10,5 10,2 13,2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+      '<button class="nb' + (!isCum&&ct==='line'?' a':'') + '" data-action="ct" data-ct="line"' + tAttr + ' style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><polyline points="1,12 5,8 9,10 13,2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<button class="nb' + (!isCum&&ct==='bar'?' a':'') + '" data-action="ct" data-ct="bar"' + tAttr + ' style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="7" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="5.5" y="4" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="10" y="1" width="3" height="12" rx="0.5" fill="currentColor"/></svg></button>' +
+      '<button class="nb' + (isCum?' a':'') + '" data-action="ct" data-ct="cum"' + tAttr + ' style="font-size:12px;padding:4px 8px;line-height:1"><svg width="14" height="14" viewBox="0 0 14 14"><polyline points="1,12 4,12 4,8 7,8 7,5 10,5 10,2 13,2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
   }
 
   _extraCards(a, d, d1) {
