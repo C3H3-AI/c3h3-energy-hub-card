@@ -1025,6 +1025,8 @@ class C3h3EnergyHubCard extends HTMLElement {
       (entry.cost ? '<span style="color:var(--secondary-text-color)">¥' + entry.cost.toFixed(0) + '</span>' : '') +
       '</div>';
   }
+
+  _btnGroup(a) {
     let m = this._chartModes[a.id]||(a.type==='water'?'cost':'usage');
     let ct = this._chartTypes[a.id]||'bar';
     let isCum = (ct === 'cum');
