@@ -90,19 +90,43 @@ const STYLE = '<style>.eh{font-family:var(--paper-font-body1_-_font-family);font
 '.eh .ar{font-size:16px;color:var(--secondary-text-color);transition:transform 0.2s;opacity:0.7;padding:4px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--divider-color);flex-shrink:0}' +
 '.eh .dsec{border-bottom:1px solid var(--divider-color)}.eh .dsec:last-child{border-bottom:none}' +
 '.eh .yt{font-size:13px;font-weight:500;min-width:28px;text-align:center;color:var(--primary-text-color)}' +
-'.eh .tp{display:flex;align-items:center;gap:8px;margin-bottom:10px}' +
-'.eh .tl{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}.eh .tl>.sc{padding:5px 2px}' +
+'.eh .tp{display:flex;align-items:center;gap:12px;margin-bottom:10px}' +
+'.eh .tl{flex:1;min-width:0;display:grid;grid-template-columns:1fr;gap:6px}.eh .tl>.sc{padding:6px 8px;text-align:left;display:flex;justify-content:space-between;align-items:center}' +
+'.eh .tl .sv{font-size:15px;font-weight:700}.eh .tl .sl{font-size:11px;margin-top:0}' +
 '.eh .rs{border-radius:12px;border:1px solid var(--divider-color);overflow:hidden}' +
 '.eh .pr{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:11px}.eh .pb{flex:1;height:6px;border-radius:3px;background:var(--divider-color);overflow:hidden}' +
 '.eh .pf{height:100%;border-radius:3px;transition:width 0.4s ease}' +
 '.eh .fl{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}' +
-'@media (min-width:600px){.eh .tl{grid-template-columns:1fr 1fr 1fr}.eh .b{padding:14px}}' +
-'@media (min-width:1024px){.eh .tl{grid-template-columns:1fr 1fr 1fr 1fr 1fr}.eh .b{padding:20px}}' +
-'@media print{.eh .nb,.eh .ar{display:none!important}.eh .b{padding:8px}.eh .rs{border:none;border-radius:0}.eh .enr{break-inside:avoid}}' +
+// New overview layout: ring chart left, cost cards right
+'.eh .ov{display:flex;align-items:stretch;gap:12px;margin-bottom:8px}' +
+'.eh .ov .dw{width:100px;height:100px;flex-shrink:0;display:flex;align-items:center;justify-content:center}' +
+'.eh .ov .dw svg{width:100px;height:100px}' +
+'.eh .ov .or{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;justify-content:center}' +
+'.eh .oi{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;background:var(--secondary-background-color);gap:6px}' +
+'.eh .oi .od{width:8px;height:8px;border-radius:4px;flex-shrink:0}' +
+'.eh .oi .on{font-size:12px;color:var(--primary-text-color);flex:1}' +
+'.eh .oi .ovl{font-size:14px;font-weight:700}' +
+'.eh .oi .op{font-size:10px;color:var(--secondary-text-color);min-width:36px;text-align:right}' +
+'.eh .ot{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;background:var(--primary-color);color:#fff;font-weight:600;font-size:13px}' +
+// New account row layout
+'.eh .er2{display:flex;align-items:center;padding:10px;border-bottom:1px solid var(--divider-color);gap:8px;cursor:pointer;transition:background 0.15s;min-height:48px}' +
+'.eh .er2:hover{background:var(--secondary-background-color)}' +
+'.eh .er2 .ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}' +
+'.eh .er2 .eb{flex:1;min-width:0}' +
+'.eh .er2 .en{font-size:14px;font-weight:500;color:var(--primary-text-color)}' +
+'.eh .er2 .es{font-size:11px;color:var(--secondary-text-color);margin-top:1px}' +
+'.eh .er2 .ev{text-align:right}' +
+'.eh .er2 .ev .evv{font-size:15px;font-weight:700;color:var(--primary-text-color);letter-spacing:-0.3px}' +
+'.eh .er2 .ev .evu{font-size:10px;color:var(--secondary-text-color);margin-left:2px}' +
+'.eh .er2 .ev .es2{font-size:10px;color:var(--secondary-text-color);display:block;margin-top:1px}' +
+'@media (min-width:600px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:14px}}' +
+'@media (min-width:1024px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:20px}}' +
+'@media print{.eh .nb,.eh .ar{display:none!important}.eh .b{padding:8px}.eh .rs{border:none;border-radius:0}.eh .en{break-inside:avoid}}' +
 '.eh .fs{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:var(--card-background-color,#fff);display:flex;align-items:center;justify-content:center;padding:20px;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}.eh .fs>.ca{max-width:800px;max-height:600px}.eh .fs .fs-close{position:absolute;top:16px;right:16px;z-index:10000}' +
 '.eh .ys{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:10px}' +
 '.eh .ys>.sc{padding:8px 4px}' +
-'@media (max-width:399px){.eh .tp{flex-direction:column;align-items:flex-start}.eh .tl{width:100%;grid-template-columns:1fr 1fr}.eh .dw{display:none}.eh .enr{padding:8px}.eh .enr>.ar{display:none}.eh .bls{flex-wrap:wrap;gap:4px;font-size:11px!important}.eh .ha.htr{flex-direction:column;align-items:stretch;gap:4px}.eh .sv{font-size:12px}.eh .vl{max-width:80px;font-size:12px}}' +
+'@media (max-width:399px){.eh .ov{flex-direction:column;align-items:stretch}.eh .ov .dw{width:80px;height:80px;align-self:center}.eh .ov .dw svg{width:80px;height:80px}.eh .enr{padding:8px}.eh .enr>.ar{display:none}.eh .bls{flex-wrap:wrap;gap:4px;font-size:11px!important}.eh .ha.htr{flex-direction:column;align-items:stretch;gap:4px}.eh .sv{font-size:12px}.eh .vl{max-width:80px;font-size:12px}}' +
+'@media (min-width:400px) and (max-width:599px){.eh .ov .dw{width:80px;height:80px}.eh .ov .dw svg{width:80px;height:80px}.eh .sd2{grid-template-columns:repeat(2,1fr)}.eh .tl .sv{font-size:13px}}' +
 // Balance display
 '.eh .bl{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--secondary-text-color);white-space:nowrap;margin-left:auto}' +
 '.eh .bl .bv{font-weight:600;color:var(--primary-color)}' +
@@ -156,29 +180,28 @@ class C3h3EnergyHubCard extends HTMLElement {
 
     // Render shell
     this.innerHTML = STYLE + '<div class="eh"><ha-card><div class="b">' +
-    '<div class="ha htr" style="justify-content:space-between;margin-bottom:8px">' +
-    '<div class="ha"><button class="nb tb" data-action="switchMode" style="font-size:11px;padding:2px 12px">本月</button>' +
-    '<button class="nb" data-action="summary" style="font-size:11px;padding:2px 12px">总结</button></div>' +
-    '</div></div>' +
+    '<div class="ha htr" style="justify-content:space-between;margin-bottom:6px">' +
+    '<div class="ha"><button class="nb" data-action="cy" data-dir="-1" style="font-size:11px;padding:2px 8px;min-height:28px"><</button>' +
+    '<span class="yt yr" style="font-size:14px;min-width:44px;cursor:default;color:var(--primary-text-color);font-weight:600">2026</span>' +
+    '<button class="nb" data-action="cy" data-dir="1" style="font-size:11px;padding:2px 8px;min-height:28px">></button>' +
+    '<span style="width:1px;height:14px;background:var(--divider-color);margin:0 4px"></span>' +
+    '<button class="nb tb" data-action="switchMode" style="font-size:11px;padding:2px 10px">本月</button>' +
+    '<button class="nb" data-action="summary" style="font-size:11px;padding:2px 10px">总结</button></div>' +
+    '<span class="tc" style="font-size:14px;font-weight:700;color:#e65100;white-space:nowrap">--</span></div>' +
     // Balance row
     '<div class="bls" style="display:flex;gap:10px;margin-bottom:6px;font-size:13px;align-items:center"></div>' +
-    '<div class="tp"><div class="dw" style="width:72px;height:72px;flex-shrink:0"><svg></svg></div><div class="tl">' +
-    '<div class="sc"><div class="sv ye">--</div><div class="sl">本年</div></div>' +
-    '<div class="sc"><div class="sv te">--</div><div class="sl">用电 kWh</div></div>' +
-    '<div class="sc"><div class="sv gv">--</div><div class="sl">燃气 m³</div></div>' +
-    '<div class="sc"><div class="sv wv">--</div><div class="sl">用水 m³</div></div>' +
-    '<div class="sc"><div class="sv tc" style="color:#e65100">--</div><div class="sl">总账单</div></div>' +
-    '</div></div>' +
-    '<div class="cl dl" style="font-size:10px;gap:14px;margin-bottom:6px"></div>' +
+    // Overview: ring chart left, cost cards right
+    '<div class="ov"><div class="dw"><svg></svg></div><div class="or"></div></div>' +
     '<div class="fl fb"></div>' +
-    '<div class="rs"><div class="rc"></div></div>' +
+    '<div class="rs"><div class="rc"></div></div>'
     '</div></ha-card></div>';
 
     const root = this.querySelector('.eh');
-    this._el = { root: root, dw: root.querySelector('.dw'), ye: root.querySelector('.ye'), te: root.querySelector('.te'),
+    this._el = { root: root, dw: root.querySelector('.dw'), ye: root.querySelector('.yr'), te: root.querySelector('.te'),
       gv: root.querySelector('.gv'), wv: root.querySelector('.wv'), dl: root.querySelector('.dl'),
       rc: root.querySelector('.rc'), tc: root.querySelector('.tc'), tb: root.querySelector('.tb'),
-      fb: root.querySelector('.fb'), yv: root.querySelector('.ye'), bls: root.querySelector('.bls') };
+      fb: root.querySelector('.fb'), yv: root.querySelector('.ye'), bls: root.querySelector('.bls'),
+      or: root.querySelector('.or') };
 
     if (this._hass) { this._load(); }
   }
@@ -345,6 +368,9 @@ class C3h3EnergyHubCard extends HTMLElement {
         let r = s.getBoundingClientRect();
         self._hoverPos = { x: e.clientX - r.left, y: e.clientY - r.top };
       });
+      // ESC to exit fullscreen
+      this._keyHandler = function(e) { if (e.key === 'Escape' && self._fullscreen) { self._fullscreen = false; self._renderRows(); } };
+      document.addEventListener('keydown', this._keyHandler);
     }
   }
 
@@ -352,6 +378,7 @@ class C3h3EnergyHubCard extends HTMLElement {
     if (this._rt) clearTimeout(this._rt);
     if (this._ht) clearTimeout(this._ht);
     if (this._dt) clearTimeout(this._dt);
+    if (this._keyHandler) { document.removeEventListener('keydown', this._keyHandler); this._keyHandler = null; }
     this._bound = false;
   }
 
@@ -737,20 +764,22 @@ class C3h3EnergyHubCard extends HTMLElement {
       }
     }
 
-    // Ring chart - always use cost (¥) for proportions
+    // Ring chart + right-side cost cards
     let cVals = [ringEle, ringGas, ringWater].filter(function(v){return v>0;});
     let cCols = [CC.el, CC.ga, CC.wa].slice(0, cVals.length);
     let cLabels = ['用电', '燃气', '用水'].slice(0, cVals.length);
     this._el.dw.innerHTML = _ring(cVals, cCols);
 
-    let dlArr = [];
+    // Cost cards on the right
+    let orArr = [];
     if (cVals.length > 0) {
       let cTotal = cVals.reduce(function(a,b){return a+b;}, 0);
       for (let i=0;i<cLabels.length;i++) {
-        dlArr.push('<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:3px;background:' + cCols[i] + '"></span><span style="font-weight:500;color:var(--primary-text-color)">' + cLabels[i] + '</span><span style="color:var(--secondary-text-color)">¥' + cVals[i].toFixed(0) + ' ' + _pct(cVals[i], cTotal) + '%</span></span>');
+        orArr.push('<div class="oi"><span class="od" style="background:' + cCols[i] + '"></span><span class="on">' + cLabels[i] + '</span><span class="ovl" style="color:' + cCols[i] + '">¥' + cVals[i].toFixed(0) + '</span><span class="op">' + _pct(cVals[i], cTotal) + '%</span></div>');
       }
+      orArr.push('<div class="ot"><span>合计</span><span>¥' + cTotal.toFixed(0) + '</span></div>');
     }
-    this._el.dl.innerHTML = dlArr.join('');
+    this._el.or.innerHTML = orArr.join('');
   }
 
   _renderRows() {
@@ -829,13 +858,17 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
       }
 
-      html += '<div class="enr"' + (isOpen?'':' data-action="toggle" data-id="' + a.id + '"') + '>' +
+      // Build secondary info line
+      let secLine = sub || '点击查看详情';
+      if (costDisplay) secLine = costDisplay + (secLine !== '点击查看详情' ? ' · ' + secLine : '');
+      if (yoyLabel) secLine = (secLine !== '点击查看详情' ? secLine + ' · ' : '') + '<span style="color:' + (yoyLabel[0]==='+'?'#ef4444':'#10b981') + '">' + yoyLabel + '</span>';
+
+      html += '<div class="er2"' + (isOpen?'':' data-action="toggle" data-id="' + a.id + '"') + '>' +
         '<div class="ic" style="background:' + color + '15">' + a.icon + '</div>' +
-        '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--primary-text-color)">' + a.name + (alertMsg ? '<span style="float:right;color:#ef4444;font-size:11px">' + alertMsg + '</span>' : '') + '</div><div style="font-size:10px;color:var(--secondary-text-color)">' + (sub||'点击查看详情') + '</div>' +
-        (budgetVal != null ? '<div style="margin-top:3px;display:flex;align-items:center;gap:4px"><div style="flex:1;height:4px;border-radius:2px;background:var(--divider-color);overflow:hidden"><div style="height:100%;width:' + budgetVal.toFixed(0) + '%;background:' + budgetColor + ';border-radius:2px"></div></div><span style="font-size:9px;color:' + budgetColor + '">' + budgetLabel + '</span></div>' : '') + '</div>' +
-        '<div style="text-align:right"><div class="vl">' + d.month.toFixed(1) + ' ' + a.unit + '</div><div style="display:flex;gap:5px;font-size:10px;color:var(--secondary-text-color);justify-content:flex-end;align-items:center">' +
-        (yoyLabel ? '<span style="color:' + (yoyLabel[0]==='+'?'#ef4444':'#10b981') + '">' + yoyLabel + '</span>' : '') +
-        (costDisplay ? '<span style="color:' + color + '">' + costDisplay + '</span>' : '') + '</div></div>' +
+        '<div class="eb"><div class="en">' + a.name + (alertMsg ? '<span style="margin-left:6px;color:#ef4444;font-size:10px">' + alertMsg + '</span>' : '') + '</div><div class="es">' + secLine + '</div></div>' +
+        '<div class="ev"><div class="evv">' + d.month.toFixed(1) + '<span class="evu">' + a.unit + '</span></div><div class="es2">' +
+        (budgetVal != null ? '<span style="color:' + budgetColor + '">预算' + budgetLabel + '</span>' : '') +
+        '</div></div>' +
         '<div class="ar" style="transform:rotate(' + (isOpen?'90':'0') + 'deg)"></div></div>';
 
       if (isOpen) {
