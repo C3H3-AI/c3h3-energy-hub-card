@@ -36,17 +36,19 @@ function _ring(vals, colors) {
 function _tip(m, d1, d2, u, PL, SX, H, W, pos, mode, acct) {
   const s1 = d1 && d1[m]; if (!s1) return '';
   const s2 = d2 && d2[m];
-  const TW = 150, TH = 62;
-  let tx = pos ? Math.max(2, Math.min(W - TW - 2, pos.x - TW / 2)) : 2;
-  let ty = pos ? Math.max(2, Math.min(H - TH - 2, pos.y - TH - 8)) : 2;
-  if (ty < 2) ty = pos ? Math.min(H - TH - 2, pos.y + 10) : 2;
-
   const y1v = Math.max(0, s1.change || 0);
   const y1c = s1.cost || 0;
   const y2v = s2 ? Math.max(0, s2.change || 0) : 0;
   const y2c = s2 ? (s2.cost || 0) : 0;
-
   const hasCost = y1c > 0 || y2c > 0;
+  const TH = hasCost ? 62 : 50, TW = 150;
+  let tx = pos ? Math.max(2, Math.min(W - TW - 2, pos.x - TW / 2)) : 2;
+  let ty = pos ? pos.y - TH - 10 : 2;
+  // Flip below if above would overflow
+  if (ty < 2 && pos) ty = pos.y + 12;
+  // Clamp horizontal
+  tx = Math.max(2, Math.min(W - TW - 2, tx));
+
   const unit = u || (acct && acct.unit) || '';
   const color1 = CC.y1, color2 = CC.y2;
 
@@ -417,7 +419,14 @@ class C3h3EnergyHubCard extends HTMLElement {
         let s = e.target.closest('svg');
         if (!s) return;
         let r = s.getBoundingClientRect();
-        self._hoverPos = { x: e.clientX - r.left, y: e.clientY - r.top };
+        let nx = e.clientX - r.left, ny = e.clientY - r.top;
+        if (self._hoverMonth && (Math.abs(nx - (self._hoverPos?.x || -999)) > 3 || Math.abs(ny - (self._hoverPos?.y || -999)) > 3)) {
+          self._hoverPos = { x: nx, y: ny };
+          if (self._mt) clearTimeout(self._mt);
+          self._mt = setTimeout(function() { self._mt=null; self._renderRows(); }, 40);
+        } else {
+          self._hoverPos = { x: nx, y: ny };
+        }
       });
       // ESC to exit fullscreen
       this._keyHandler = function(e) { if (e.key === 'Escape' && self._fullscreen) { self._fullscreen = false; self._renderRows(); } };
@@ -429,6 +438,7 @@ class C3h3EnergyHubCard extends HTMLElement {
     if (this._rt) clearTimeout(this._rt);
     if (this._ht) clearTimeout(this._ht);
     if (this._dt) clearTimeout(this._dt);
+    if (this._mt) clearTimeout(this._mt);
     if (this._keyHandler) { document.removeEventListener('keydown', this._keyHandler); this._keyHandler = null; }
     this._bound = false;
   }
