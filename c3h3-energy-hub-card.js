@@ -209,7 +209,7 @@ class C3h3EnergyHubCard extends HTMLElement {
     this._detailCache = {}; this._dailyCache = {};
     this._loadingDetails = {}; this._liveData = {};
     this._showYear = false; this._showSummary = false; this._drillMonth = null;
-    this._fullscreen = false;
+    this._fullscreen = false; this._calMonth = new Date().getMonth();
 
     // Parse config: build account list
     this._accounts = this._buildAccounts();
@@ -386,23 +386,32 @@ class C3h3EnergyHubCard extends HTMLElement {
         } else if (a === 'drillClose') {
           self._drillMonth = null;
           self._renderRows();
+        } else if (a === 'calPrev') {
+          self._calMonth = self._calMonth > 0 ? self._calMonth - 1 : 11;
+          self._renderRows();
+        } else if (a === 'calNext') {
+          self._calMonth = self._calMonth < 11 ? self._calMonth + 1 : 0;
+          self._renderRows();
         }
       });
       this.addEventListener('mouseover', function(e) {
         let btn = e.target.closest('[data-action="month"],[data-action="drill"]');
         if (!btn) return;
         let m = Number(btn.dataset.month);
-        if (!self._hoverMonth || self._hoverMonth.month !== m) {
-          self._hoverMonth = { year: Number(btn.dataset.year), month: m };
+        let day = btn.dataset.day ? Number(btn.dataset.day) : null;
+        if (!self._hoverMonth || self._hoverMonth.month !== m || self._hoverMonth.day !== day) {
+          self._hoverMonth = { year: Number(btn.dataset.year), month: m, day: day };
           if (self._ht) clearTimeout(self._ht);
-          self._ht = setTimeout(function() { self._ht=null; self._renderRows(); }, 200);
+          self._ht = setTimeout(function() { self._ht=null; self._renderRows(); }, 80);
         }
       });
       this.addEventListener('mouseout', function(e) {
         if (!e.target.closest('[data-action="month"],[data-action="drill"]')) return;
-        self._hoverMonth = null;
+        // Delay hide to allow moving between adjacent bars
         if (self._ht) clearTimeout(self._ht);
-        self._ht = setTimeout(function() { self._ht=null; self._renderRows(); }, 200);
+        self._ht = setTimeout(function() {
+          self._ht=null; self._hoverMonth=null; self._renderRows();
+        }, 300);
       });
       this.addEventListener('mousemove', function(e) {
         let s = e.target.closest('svg');
@@ -599,6 +608,19 @@ class C3h3EnergyHubCard extends HTMLElement {
       }
     }
 
+    // For ele:total, collect sub-account stat IDs instead
+    if (acct.type === 'electricity' && acct.consNo === 'total') {
+      let allStats = [];
+      for (let i=0;i<this._accounts.length;i++) {
+        let sa = this._accounts[i];
+        if (sa.type === 'electricity' && sa.consNo !== 'total' && sa.statistics) {
+          if (sa.statistics.energy) allStats.push(sa.statistics.energy);
+          if (sa.statistics.cost) allStats.push(sa.statistics.cost);
+        }
+      }
+      if (allStats.length > 0) { statIds = allStats; }
+    }
+
     if (statIds.length === 0) {
       this._loadingDetails[id] = false;
       this._renderRows();
@@ -636,19 +658,6 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
       }
       return result;
-    }
-
-    // For ele:total, also collect sub-account stat IDs
-    if (acct.type === 'electricity' && acct.consNo === 'total') {
-      let allStats = [];
-      for (let i=0;i<this._accounts.length;i++) {
-        let sa = this._accounts[i];
-        if (sa.type === 'electricity' && sa.consNo !== 'total' && sa.statistics) {
-          if (sa.statistics.energy) allStats.push(sa.statistics.energy);
-          if (sa.statistics.cost) allStats.push(sa.statistics.cost);
-        }
-      }
-      if (allStats.length > 0) { statIds = allStats; }
     }
 
     Promise.all([
@@ -972,7 +981,9 @@ class C3h3EnergyHubCard extends HTMLElement {
           '<div class="ca">' + this._chartSVG(a.id, ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), this._chartTypes[a.id]||'bar', a.name) + '</div>' +
           (this._fullscreen ? '</div>' : '') +
           (this._drillMonth != null && a.type==='electricity' ? this._drillDaily(a.consNo, this._drillMonth, y1) : '') +
-          (a.type==='electricity' ? this._dailySVG(a.consNo) : '') +
+          (a.type==='electricity' ? this._dailyCalendar(a.consNo) : '') +
+          // Day tooltip for calendar hover
+          (this._hoverMonth && this._hoverMonth.day != null ? this._dayTipHTML(a, this._hoverMonth) : '') +
           this._bottomCards(ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), a.unit) +
           '<div class="ha" style="margin-top:4px;gap:4px">' +
           '<button class="nb" data-action="fullscreen" style="font-size:10px;padding:2px 8px">全屏</button>' +
@@ -1004,7 +1015,21 @@ class C3h3EnergyHubCard extends HTMLElement {
     return '<div style="padding:4px 12px 8px"><div style="font-size:10px;color:var(--secondary-text-color);display:flex;justify-content:space-between;margin-bottom:2px"><span>day ' + (monthIdx+1) + ' ele</span><button class="nb" data-action="drillClose" style="font-size:10px;padding:1px 6px">X</button></div><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:50px;display:block">' + bars + '</svg></div>';
   }
 
-  _btnGroup(a) {
+  _dayTipHTML(acct, hm) {
+    if (!hm || hm.day == null) return '';
+    let days = this._dailyCache[acct.consNo];
+    if (!days) return '';
+    let prefix = String(hm.year) + (hm.month+1).toString().padStart(2,'0') + (hm.day).toString().padStart(2,'0');
+    let entry = null;
+    for (let i=0;i<days.length;i++) { if (days[i].day === prefix) { entry = days[i]; break; } }
+    if (!entry) return '';
+    const val = entry.ele || 0;
+    return '<div style="padding:8px 12px;background:var(--card-background-color);border-radius:8px;border:1px solid var(--divider-color);margin-top:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.1)">' +
+      '<span style="font-weight:600;color:var(--primary-text-color)">' + hm.month+1 + '月' + hm.day + '日</span>' +
+      '<span style="color:' + CC.el + ';font-weight:700">' + val.toFixed(1) + ' kWh</span>' +
+      (entry.cost ? '<span style="color:var(--secondary-text-color)">¥' + entry.cost.toFixed(0) + '</span>' : '') +
+      '</div>';
+  }
     let m = this._chartModes[a.id]||(a.type==='water'?'cost':'usage');
     let ct = this._chartTypes[a.id]||'bar';
     let isCum = (ct === 'cum');
@@ -1400,16 +1425,57 @@ class C3h3EnergyHubCard extends HTMLElement {
     return svg;
   }
 
-  _dailySVG(consNo) {
-    let d = this._dailyCache[consNo];
-    if (!d || d.length === 0) return '';
-    let days = d.length; let W = 280; let H = 50; let PT = 4; let PB = 12; let CH = H - PT - PB;
-    let maxV = 1; for (let i=0;i<days;i++) { if (d[i].ele > maxV) maxV = d[i].ele; }
-    let bw = Math.max(1, W/days-1);
-    let bars = '';
-    for (let i=0;i<days;i++) { let h = (d[i].ele/maxV)*CH; let x = i*(bw+1); let y = H-PB-h; bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + CC.y2 + '" opacity="0.5" rx="1"/>'; }
-    let last = d[d.length-1];
-    return '<div style="margin-top:6px"><div style="font-size:10px;color:var(--secondary-text-color);display:flex;justify-content:space-between"><span>近30日日用电</span><span style="font-weight:500">昨日 ' + (last?last.ele.toFixed(1):'--') + ' kWh</span></div><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:50px;display:block">' + bars + '</svg></div>';
+  _dailyCalendar(consNo) {
+    if (!consNo) return '';
+    let allDays = this._dailyCache[consNo];
+    if (!allDays || allDays.length === 0) return '';
+
+    // Filter to selected calendar month
+    const now = new Date();
+    const cy = now.getFullYear();
+    const cm = this._calMonth;
+    const prefix = String(cy) + (cm+1).toString().padStart(2,'0');
+    let days = allDays.filter(function(x) { return x.day && x.day.indexOf(prefix) === 0; });
+    if (days.length === 0) return '';
+
+    // Build day map
+    let dayMap = {};
+    for (let i=0;i<days.length;i++) { let d = parseInt(days[i].day.substring(6,8),10); dayMap[d] = days[i]; }
+
+    // Calendar grid
+    const firstDay = new Date(cy, cm, 1).getDay(); // 0=Sun
+    const lastDate = new Date(cy, cm+1, 0).getDate();
+    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const maxV = Math.max.apply(null, days.map(function(d){return d.ele||0;}).concat([1]));
+
+    let cells = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:10px">';
+    // Weekday headers
+    const wd = ['日','一','二','三','四','五','六'];
+    for (let wi=0;wi<7;wi++) { cells += '<div style="padding:3px 0;color:var(--secondary-text-color);font-weight:500">' + wd[wi] + '</div>'; }
+    // Empty cells before first day
+    for (let ei=0;ei<firstDay;ei++) { cells += '<div></div>'; }
+    // Day cells
+    for (let d=1;d<=lastDate;d++) {
+      const dd = dayMap[d];
+      const val = dd ? (dd.ele||0) : 0;
+      const pct = maxV > 0 ? (val/maxV) : 0;
+      const opacity = val > 0 ? (0.25 + pct * 0.65) : 0.08;
+      const isToday = (d === now.getDate() && cm === now.getMonth());
+      const border = isToday ? '2px solid var(--primary-color)' : '1px solid var(--divider-color)';
+      cells += '<div style="position:relative;padding:4px 2px;border-radius:6px;background:var(--primary-color);opacity:' + opacity + ';border:' + border + ';cursor:pointer" data-action="month" data-year="' + cy + '" data-month="' + cm + '" data-day="' + d + '">' +
+        '<div style="font-size:9px;font-weight:600;color:' + (opacity>0.5?'#fff':'var(--primary-text-color)') + '">' + d + '</div>' +
+        (val > 0 ? '<div style="font-size:7px;color:' + (opacity>0.5?'rgba(255,255,255,0.8)':'var(--secondary-text-color)') + '">' + val.toFixed(1) + '</div>' : '') +
+        '</div>';
+    }
+    cells += '</div>';
+
+    return '<div style="margin-top:8px;border-top:1px solid var(--divider-color);padding-top:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+      '<span style="font-size:11px;font-weight:600;color:var(--primary-text-color)">📅 ' + monthNames[cm] + ' 日用电</span>' +
+      '<div class="ha"><button class="nb" data-action="calPrev" style="font-size:10px;padding:1px 6px;min-height:24px"><</button>' +
+      '<span style="font-size:11px;min-width:32px;text-align:center">' + monthNames[cm] + '</span>' +
+      '<button class="nb" data-action="calNext" style="font-size:10px;padding:1px 6px;min-height:24px">></button></div></div>' +
+      cells + '</div>';
   }
 
   // ──── Export Methods ────
