@@ -755,11 +755,6 @@ class C3h3EnergyHubCard extends HTMLElement {
       }
     }
 
-    this._el.te.textContent = eleTotal > 0 ? eleTotal.toFixed(0) : '--';
-    this._el.gv.textContent = gasMonth != null ? gasMonth.toFixed(1) : '--';
-    this._el.wv.textContent = waterMonth != null ? waterMonth.toFixed(1) : '--';
-
-    let tot;
     let ringEle = lastCost||0, ringGas = gasBill||0, ringWater = waterBill||0;
     if (isY && this._costCache) {
       let ccKey = 'cost:' + this._year;
@@ -777,7 +772,7 @@ class C3h3EnergyHubCard extends HTMLElement {
         }
       }
     }
-    tot = ringEle + ringGas + ringWater;
+    let tot = ringEle + ringGas + ringWater;
     this._el.tc.textContent = tot > 0 ? String(tot.toFixed(0)) : '--';
 
     // Balance row
