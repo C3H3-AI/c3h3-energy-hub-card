@@ -163,6 +163,15 @@ const STYLE = '<style>.eh{font-family:var(--paper-font-body1_-_font-family);font
 '.eh .er2 .ev .evv{font-size:15px;font-weight:700;color:var(--primary-text-color);letter-spacing:-0.3px}' +
 '.eh .er2 .ev .evu{font-size:10px;color:var(--secondary-text-color);margin-left:2px}' +
 '.eh .er2 .ev .es2{font-size:10px;color:var(--secondary-text-color);display:block;margin-top:1px}' +
+// Desktop: account grid + expanded side-by-side + ring chart
+'@media(min-width:800px){.eh .eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:10px;margin-top:4px}' +
+'.eh .eg>.ea{border:1px solid var(--divider-color);border-radius:12px;overflow:hidden;height:fit-content;background:var(--card-background-color)}' +
+'.eh .eg>.ea>.er2{border:none;min-height:52px;padding:12px}.eh .eg>.ea>.dsec:last-child{border-radius:0 0 12px 12px}' +
+'.eh .eg>.ea.ef{grid-column:1/-1}' +
+'.eh .ov .dw{width:130px;height:130px;flex-shrink:0}.eh .ov .dw svg{width:130px;height:130px}' +
+'.eh .ed{display:grid;grid-template-columns:1fr 1fr;gap:12px}}' +
+// Mobile: expanded detail stacked
+'.eh .ed{display:flex;flex-direction:column;gap:10px}' +
 '@media (min-width:600px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:14px}}' +
 '@media (min-width:1024px){.eh .tl{grid-template-columns:1fr}.eh .b{padding:20px}}' +
 '@media print{.eh .nb,.eh .ar{display:none!important}.eh .b{padding:8px}.eh .rs{border:none;border-radius:0}.eh .en{break-inside:avoid}}' +
@@ -854,7 +863,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       return false;
     }.bind(this));
 
-    let html = '';
+    let html = '<div class="eg">';
     for (let ai=0;ai<visible.length;ai++) {
       let a = visible[ai];
       let d = ld[a.id];
@@ -936,7 +945,7 @@ class C3h3EnergyHubCard extends HTMLElement {
       if (costDisplay) secLine = costDisplay + (secLine !== '点击查看详情' ? ' · ' + secLine : '');
       if (yoyLabel) secLine = (secLine !== '点击查看详情' ? secLine + ' · ' : '') + '<span style="color:' + (yoyLabel[0]==='+'?'#ef4444':'#10b981') + '">' + yoyLabel + '</span>';
 
-      html += '<div class="er2"' + (isOpen?'':' data-action="toggle" data-id="' + a.id + '"') + '>' +
+      html += '<div class="ea' + (isOpen?' ef':'') + '"><div class="er2"' + (isOpen?'':' data-action="toggle" data-id="' + a.id + '"') + '>' +
         '<div class="ic" style="background:' + color + '15">' + a.icon + '</div>' +
         '<div class="eb"><div class="en">' + a.name + (alertMsg ? '<span style="margin-left:6px;color:#ef4444;font-size:10px">' + alertMsg + '</span>' : '') + '</div><div class="es">' + secLine + '</div></div>' +
         '<div class="ev"><div class="evv">' + d.month.toFixed(1) + '<span class="evu">' + a.unit + '</span></div><div class="es2">' +
@@ -965,14 +974,14 @@ class C3h3EnergyHubCard extends HTMLElement {
               this._bottomCards(ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), a.unit) +
               '</div></div>';
           }
-          continue;
+          html += '</div>'; continue;
         }
         let isLoading = this._loadingDetails[a.id];
         let ca1 = this._detailCache[a.id+':'+y1] || {};
         let ca2 = this._detailCache[a.id+':'+y2] || {};
         if (isLoading && Object.keys(ca1).length === 0) {
           html += '<div class="dsec"><div style="padding:24px;text-align:center;color:var(--secondary-text-color);font-size:13px">加载中...</div></div>';
-          continue;
+          html += '</div>'; continue;
         }
         html += '<div class="dsec"><div style="padding:8px 12px 10px">' +
           this._tierHTML(a) +
@@ -983,19 +992,23 @@ class C3h3EnergyHubCard extends HTMLElement {
           this._extraCards(a, d, ca1) +
           '<div class="cl" style="margin-bottom:2px;font-size:10px;gap:14px"><span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:' + CC.y1 + '"></span>本年</span><span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:' + CC.y2 + '"></span>去年</span></div>' +
           (this._fullscreen ? '<div class="fs"><div class="fs-close"><button class="nb" data-action="fullscreen" style="font-size:12px">✕</button></div>' : '') +
+          '<div class="ed"><div class="ed-l">' +
           '<div class="ca">' + this._chartSVG(a.id, ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), this._chartTypes[a.id]||'bar', a.name) + '</div>' +
           (this._fullscreen ? '</div>' : '') +
           (this._drillMonth != null && a.type==='electricity' ? this._drillDaily(a.consNo, this._drillMonth, y1) : '') +
+          this._bottomCards(ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), a.unit) +
+          '</div><div class="ed-r">' +
           (a.type==='electricity' ? this._dailyCalendar(a.consNo) : '') +
           // Day tooltip for calendar hover
           (this._hoverMonth && this._hoverMonth.day != null ? this._dayTipHTML(a, this._hoverMonth) : '') +
-          this._bottomCards(ca1, ca2, this._chartModes[a.id]||(a.type==='water'?'cost':'usage'), a.unit) +
+          '</div></div>' +
           '<div class="ha" style="margin-top:4px;gap:4px">' +
           '<button class="nb" data-action="fullscreen" style="font-size:10px;padding:2px 8px">全屏</button>' +
           '</div></div></div>';
       }
+      html += '</div>';
     }
-    this._el.rc.innerHTML = html;
+    this._el.rc.innerHTML = html + '</div>';
   }
 
   _drillDaily(consNo, monthIdx, year) {
